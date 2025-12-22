@@ -4,6 +4,9 @@
 	"workspaces": [
 		"src/*"
 	],
+	"scripts": {
+		"scrape": "bun run --filter @maven-lightning-search/data scrape"
+	},
 	"catalog": {
 		"zod": "^4.2.1",
 		"drizzle-orm": "^0.45.1"

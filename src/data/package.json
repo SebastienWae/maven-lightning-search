@@ -5,5 +5,8 @@
 		"zod": "catalog:",
 		"drizzle-orm": "catalog:",
 		"@maven-lightning-search/db": "workspace:*"
+	},
+	"scripts": {
+		"scrape": "bun run scraper.ts"
 	}
 }
