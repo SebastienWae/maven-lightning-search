@@ -1,10 +1,7 @@
 {
   "name": "maven-lightning-search",
   "private": true,
-  "workspaces": [
-    "src/*"
-  ],
-  "catalog": {
+  "dependencies": {
     "zod": "^4.2.1",
     "drizzle-orm": "^0.45.1"
   },
