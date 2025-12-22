@@ -1,12 +1,12 @@
-import { and, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/bun-sqlite";
 import {
 	instructor,
 	workshop,
 	workshopInstructors,
 	workshopTag,
 	workshopTags,
-} from "../db/schema";
+} from "@maven-lightning-search/db/schema";
+import { and, eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { env } from "../env";
 import {
 	type ApiResponse,

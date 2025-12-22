@@ -1,0 +1,9 @@
+{
+	"name": "@maven-lightning-search/data",
+	"version": "1.0.0",
+	"dependencies": {
+		"zod": "catalog:",
+		"drizzle-orm": "catalog:",
+		"@maven-lightning-search/db": "workspace:*"
+	}
+}
