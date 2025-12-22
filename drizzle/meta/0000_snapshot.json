@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "97f70182-14cd-44f8-9e0d-b5ef05879a8a",
+  "id": "8066eb02-50f7-4fe1-9ed0-ec20dc0acd3c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "instructor": {
@@ -9,32 +9,8 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "instructor_identities": {
-      "name": "instructor_identities",
-      "columns": {
-        "id": {
-          "name": "id",
           "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "instructor_id": {
-          "name": "instructor_id",
-          "type": "integer",
-          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -61,21 +37,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "instructor_identities_instructor_id_instructor_id_fk": {
-          "name": "instructor_identities_instructor_id_instructor_id_fk",
-          "tableFrom": "instructor_identities",
-          "tableTo": "instructor",
-          "columnsFrom": [
-            "instructor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -228,7 +190,7 @@
         },
         "instructor_id": {
           "name": "instructor_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

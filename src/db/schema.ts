@@ -5,7 +5,6 @@ import {
 	text,
 } from "drizzle-orm/sqlite-core";
 
-// Workshop table - stores workshop data from WorkshopItem and PublishedContentPage
 export const workshop = sqliteTable("workshop", {
 	id: integer("id").primaryKey(),
 	schoolId: integer("school_id").notNull(),
@@ -33,17 +32,8 @@ export const workshop = sqliteTable("workshop", {
 	updatedAt: text("updated_at").notNull(),
 });
 
-// Instructor table - minimal linking table that groups multiple instructor identities
 export const instructor = sqliteTable("instructor", {
-	id: integer("id").primaryKey({ autoIncrement: true }),
-});
-
-// Instructor identities table - stores name + image_url combinations
-export const instructorIdentities = sqliteTable("instructor_identities", {
-	id: text("id").primaryKey(), // SHA-256 hash
-	instructorId: integer("instructor_id")
-		.notNull()
-		.references(() => instructor.id),
+	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	imageUrl: text("image_url").notNull(),
 	createdAt: text("created_at")
@@ -51,14 +41,13 @@ export const instructorIdentities = sqliteTable("instructor_identities", {
 		.$defaultFn(() => new Date().toISOString()),
 });
 
-// Workshop instructors junction table - many-to-many relationship
 export const workshopInstructors = sqliteTable(
 	"workshop_instructors",
 	{
 		workshopId: integer("workshop_id")
 			.notNull()
 			.references(() => workshop.id),
-		instructorId: integer("instructor_id")
+		instructorId: text("instructor_id")
 			.notNull()
 			.references(() => instructor.id),
 	},

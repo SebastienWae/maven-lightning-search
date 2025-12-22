@@ -1,14 +1,8 @@
 CREATE TABLE `instructor` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE `instructor_identities` (
 	`id` text PRIMARY KEY NOT NULL,
-	`instructor_id` integer NOT NULL,
 	`name` text NOT NULL,
 	`image_url` text NOT NULL,
-	`created_at` text NOT NULL,
-	FOREIGN KEY (`instructor_id`) REFERENCES `instructor`(`id`) ON UPDATE no action ON DELETE no action
+	`created_at` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `workshop` (
@@ -34,7 +28,7 @@ CREATE TABLE `workshop` (
 --> statement-breakpoint
 CREATE TABLE `workshop_instructors` (
 	`workshop_id` integer NOT NULL,
-	`instructor_id` integer NOT NULL,
+	`instructor_id` text NOT NULL,
 	PRIMARY KEY(`workshop_id`, `instructor_id`),
 	FOREIGN KEY (`workshop_id`) REFERENCES `workshop`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`instructor_id`) REFERENCES `instructor`(`id`) ON UPDATE no action ON DELETE no action
