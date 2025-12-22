@@ -7,16 +7,13 @@ import {
 
 export const workshop = sqliteTable("workshop", {
 	id: integer("id").primaryKey(),
-	schoolId: integer("school_id").notNull(),
 	slug: text("slug").notNull(),
 	title: text("title").notNull(),
 	description: text("description").notNull(),
-	isVisibleOnDiscoveryPage: integer("is_visible_on_discovery_page", {
-		mode: "boolean",
-	}).notNull(),
+	imageUrl: text("image_url").notNull(),
 	isCanceled: integer("is_canceled", { mode: "boolean" }).notNull(),
 	isDelisted: integer("is_delisted", { mode: "boolean" }).notNull(),
-	connectedCourseId: integer("connected_course_id"),
+	isFeatured: integer("is_featured", { mode: "boolean" }).notNull(),
 	startDatetime: text("start_datetime").notNull(),
 	endDatetime: text("end_datetime").notNull(),
 	durationMin: integer("duration_min").notNull(),
@@ -28,17 +25,27 @@ export const workshop = sqliteTable("workshop", {
 		mode: "boolean",
 	}).notNull(),
 	numSignups: integer("num_signups").notNull(),
-	createdAt: text("created_at").notNull(),
-	updatedAt: text("updated_at").notNull(),
+});
+
+export const workshopTag = sqliteTable("workshop_tag", {
+	id: integer("id").primaryKey(),
+	slug: text("slug").notNull(),
+	name: text("name").notNull(),
+});
+
+export const workshopTags = sqliteTable("workshop_tags", {
+	workshopId: integer("workshop_id")
+		.notNull()
+		.references(() => workshop.id),
+	tagId: integer("tag_id")
+		.notNull()
+		.references(() => workshopTag.id),
 });
 
 export const instructor = sqliteTable("instructor", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	imageUrl: text("image_url").notNull(),
-	createdAt: text("created_at")
-		.notNull()
-		.$defaultFn(() => new Date().toISOString()),
 });
 
 export const workshopInstructors = sqliteTable(
