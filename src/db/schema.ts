@@ -40,7 +40,7 @@ export const instructor = sqliteTable("instructor", {
 
 // Instructor identities table - stores name + image_url combinations
 export const instructorIdentities = sqliteTable("instructor_identities", {
-	id: integer("id").primaryKey({ autoIncrement: true }),
+	id: text("id").primaryKey(), // SHA-256 hash
 	instructorId: integer("instructor_id")
 		.notNull()
 		.references(() => instructor.id),

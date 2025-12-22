@@ -3,7 +3,7 @@ CREATE TABLE `instructor` (
 );
 --> statement-breakpoint
 CREATE TABLE `instructor_identities` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
 	`instructor_id` integer NOT NULL,
 	`name` text NOT NULL,
 	`image_url` text NOT NULL,

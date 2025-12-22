@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "dadb8e11-2d50-4704-a005-64f67a12fccd",
+  "id": "97f70182-14cd-44f8-9e0d-b5ef05879a8a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "instructor": {
@@ -26,10 +26,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "instructor_id": {
           "name": "instructor_id",
