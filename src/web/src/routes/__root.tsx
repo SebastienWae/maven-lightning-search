@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type { ReactNode } from "react";
 
 export const Route = createRootRoute({
@@ -14,7 +15,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "Maven Lightning Lessons Search",
       },
     ],
   }),
@@ -37,6 +38,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       </head>
       <body>
         {children}
+        <div>hello world</div>
+        <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>
     </html>
