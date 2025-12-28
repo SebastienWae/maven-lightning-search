@@ -4,6 +4,16 @@
   "linter": {
     "domains": {
       "react": "recommended"
+    },
+    "rules": {
+      "a11y": {
+        "useAnchorContent": "off"
+      }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }
