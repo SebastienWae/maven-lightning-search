@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DB_FILE_NAME: z.string().default("dev.sqlite"),
 });
 
