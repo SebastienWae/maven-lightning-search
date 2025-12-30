@@ -13,7 +13,7 @@
     "check": "biome check",
     "check:fix": "biome check --fix",
     "type-check": "tsc --noEmit",
-    "scrape": "bun run --filter @maven-lightning-search/data scrape"
+    "scrape": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/data scrape"
   },
   "catalog": {
     "zod": "^4.2.1",
