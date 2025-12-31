@@ -9,7 +9,7 @@ maven-lightning-search is a search application for Maven workshops/talks with in
 - **Runtime:** Bun
 - **Monorepo:** Bun workspaces (`src/*`)
 - **Database:** SQLite with Drizzle ORM
-- **Web:** React 19, TanStack Router, TanStack Query, Tailwind CSS v4, shadcn
+- **Web:** React 19, TanStack Router, TanStack Query, Tailwind CSS v4, shadcn (using Base UI, not Radix UI)
 - **Linting/Formatting:** Biome
 - **Logging:** tslog
 
