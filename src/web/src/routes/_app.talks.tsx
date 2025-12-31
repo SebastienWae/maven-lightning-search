@@ -1,7 +1,8 @@
-import { StarIcon } from "@phosphor-icons/react";
+import { ArrowUpRightIcon, CalendarIcon, CheckCircleIcon, RecordIcon, StarIcon, UserIcon } from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -12,6 +13,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type Talk = {
   id: string;
@@ -205,35 +207,37 @@ function formatDate(date: Date): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
-function StatusBadge({ status }: { status: Talk["status"] }) {
-  const styles = {
-    Scheduled: "bg-blue-500/10 text-blue-300",
-    Live: "bg-red-500/10 text-red-300",
-    Recorded: "bg-gray-500/10",
-  };
-
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${styles[status]}`}>{status}</span>;
-}
-
 export const Route = createFileRoute("/_app/talks")({
   component: TalksPage,
 });
 
+function StatusBadge({ status }: { status: Talk["status"] }) {
+  switch (status) {
+    case "Scheduled":
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          <CalendarIcon weight="fill" size={16} className="text-gray-300" />
+          {status}
+        </span>
+      );
+    case "Live":
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          <RecordIcon size={16} weight="fill" className="text-red-300" />
+          {status}
+        </span>
+      );
+    case "Recorded":
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          <CheckCircleIcon size={16} weight="fill" className="text-green-300" />
+          {status}
+        </span>
+      );
+  }
+}
+
 function TalksPage() {
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-  const toggleRow = (id: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-dashed">
@@ -242,67 +246,62 @@ function TalksPage() {
             <TableRow>
               <TableHead>Title</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Start Time</TableHead>
               <TableHead>Duration</TableHead>
-              <TableHead>Signups</TableHead>
               <TableHead>Tags</TableHead>
               <TableHead>Instructors</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fakeTalks.map((talk) => {
-              const isExpanded = expandedRows.has(talk.id);
-              return (
-                <TableRow key={talk.id} onClick={() => toggleRow(talk.id)} className="cursor-pointer">
-                  <TableCell className="font-medium">
-                    <span className="inline-flex items-center gap-1.5">
-                      {talk.isFeatured && <StarIcon size={14} weight="fill" className="text-primary" />}
-                      {talk.title}
-                    </span>
-                  </TableCell>
-                  <TableCell className="max-w-xs">
-                    {isExpanded ? (
-                      <span className="whitespace-normal">{talk.description}</span>
-                    ) : (
-                      <span className="text-muted-foreground truncate block max-w-xs">{talk.description}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={talk.status} />
-                  </TableCell>
-                  <TableCell>{formatDate(talk.startTime)}</TableCell>
-                  <TableCell>{talk.durationMin} min</TableCell>
-                  <TableCell>{talk.numSignups}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {talk.tags.map((tag) => (
-                        <span key={tag.id} className="bg-primary/10 rounded-full px-2 py-0.5 text-xs font-medium">
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {talk.instructors.map((instructor) => (
-                        <span
-                          key={instructor.id}
-                          className="bg-primary/10 inline-flex items-center gap-1.5 rounded-full py-0.5 pr-2 pl-0.5 text-xs font-medium"
-                        >
-                          <img
-                            src={instructor.imageUrl}
-                            alt={instructor.name}
-                            className="h-4 w-4 rounded-full object-cover"
-                          />
-                          {instructor.name}
-                        </span>
-                      ))}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {fakeTalks.map((talk) => (
+              <TableRow key={talk.id}>
+                <TableCell className="font-medium">
+                  <span className="inline-flex items-center gap-1.5">
+                    {talk.isFeatured && <StarIcon size={14} weight="fill" className="text-primary" />}
+                    {talk.title}
+                  </span>
+                </TableCell>
+                <TableCell className="max-w-xs">
+                  <span className="whitespace-normal">{talk.description}</span>
+                </TableCell>
+                <TableCell>{formatDate(talk.startTime)}</TableCell>
+                <TableCell>{talk.durationMin} min</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {talk.tags.map((tag) => (
+                      <Badge key={tag.id} variant="secondary">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {talk.instructors.map((instructor) => (
+                      <Badge key={instructor.id} variant="outline" className="h-auto py-1">
+                        <Avatar size="sm">
+                          <AvatarImage src={instructor.imageUrl} />
+                          <AvatarFallback>
+                            <UserIcon />
+                          </AvatarFallback>
+                        </Avatar>
+                        {instructor.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={talk.status} />
+                </TableCell>
+                <TableCell>
+                  <Button variant="outline" size="xs">
+                    <ArrowUpRightIcon />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
