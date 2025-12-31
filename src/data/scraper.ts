@@ -7,8 +7,11 @@ import {
 } from "@maven-lightning-search/db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
+import { Logger } from "tslog";
 import { env } from "../../env";
 import { type ApiResponse, ApiResponseSchema, type PublishedContentPageSection, type WorkshopItem } from "./schema";
+
+const logger = new Logger({ name: "data:scraper" });
 
 const db = drizzle(env.DB_FILE_NAME);
 
@@ -23,6 +26,8 @@ const API_HEADERS = {
  * Fetches a single page of workshops from the Maven API
  */
 async function fetchWorkshopPage(page: number, limit: number = DEFAULT_LIMIT): Promise<ApiResponse> {
+  logger.info({ page, limit }, "Fetching workshop page");
+
   const url = new URL(API_BASE_URL);
   url.searchParams.set("tag_slug", "");
   url.searchParams.set("page", page.toString());
@@ -34,6 +39,7 @@ async function fetchWorkshopPage(page: number, limit: number = DEFAULT_LIMIT): P
   });
 
   if (!response.ok) {
+    logger.error({ page, status: response.status, statusText: response.statusText }, "Failed to fetch workshop page");
     throw new Error(`Failed to fetch page ${page}: ${response.status} ${response.statusText}`);
   }
 
@@ -49,26 +55,32 @@ async function fetchWorkshopPage(page: number, limit: number = DEFAULT_LIMIT): P
 export async function scrapeWorkshops(): Promise<WorkshopItem[]> {
   const allItems: WorkshopItem[] = [];
 
-  console.log("Fetching page 1...");
   const firstPage = await fetchWorkshopPage(1);
   allItems.push(...firstPage.items);
-  console.log(`Page 1: Fetched ${firstPage.items.length} items (Total pages: ${firstPage.metadata.pages})`);
 
   const totalPages = firstPage.metadata.pages;
+  logger.info({ totalPages }, "Starting workshop scrape");
+  logger.info(
+    { page: 1, totalPages, itemsOnPage: firstPage.items.length, totalItems: allItems.length },
+    "Fetched workshop page",
+  );
+
   for (let page = 2; page <= totalPages; page++) {
     await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY_MS));
 
-    console.log(`Fetching page ${page}/${totalPages}...`);
     try {
       const pageData = await fetchWorkshopPage(page);
       allItems.push(...pageData.items);
-      console.log(`Page ${page}: Fetched ${pageData.items.length} items (Total so far: ${allItems.length})`);
+      logger.info(
+        { page, totalPages, itemsOnPage: pageData.items.length, totalItems: allItems.length },
+        "Fetched workshop page",
+      );
     } catch (error) {
-      console.error(`Error fetching page ${page}:`, error);
+      logger.error({ page, error }, "Failed to fetch workshop page");
     }
   }
 
-  console.log(`\nScraping complete! Total items fetched: ${allItems.length}`);
+  logger.info({ totalItems: allItems.length }, "Workshop scrape complete");
   return allItems;
 }
 
@@ -166,7 +178,7 @@ export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promis
 
     const mainSection = page.sections.find((section) => section.section_type === "main");
     if (!mainSection) {
-      console.warn(`Workshop ${item.id} has no main sections, skipping...`);
+      logger.warn({ workshopId: item.id }, "Workshop missing main section, skipping");
       continue;
     }
 
@@ -231,7 +243,7 @@ export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promis
     }
   }
 
-  console.log(`Saved ${savedCount} new workshops, updated ${updatedCount} existing workshops`);
+  logger.info({ saved: savedCount, updated: updatedCount }, "Workshops saved to database");
 }
 
 /**
@@ -239,12 +251,12 @@ export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promis
  */
 export async function main(): Promise<void> {
   try {
-    console.log("Starting Maven workshop scraper...\n");
+    logger.info("Starting Maven workshop scraper");
     const workshops = await scrapeWorkshops();
     await saveWorkshopsToDatabase(workshops);
-    console.log("\nDone!");
+    logger.info("Scraper finished");
   } catch (error) {
-    console.error("Error during scraping:", error);
+    logger.error({ error }, "Scraper failed");
     process.exit(1);
   }
 }
