@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f199466f-132f-4d68-af0c-303670f90add",
+  "id": "47917539-a4ac-42fd-96c1-a79132af7427",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "instructor": {
@@ -287,7 +287,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "workshop_tags_workshop_id_tag_id_pk": {
+          "columns": [
+            "workshop_id",
+            "tag_id"
+          ],
+          "name": "workshop_tags_workshop_id_tag_id_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     }

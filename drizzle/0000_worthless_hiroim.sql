@@ -39,6 +39,7 @@ CREATE TABLE `workshop_tag` (
 CREATE TABLE `workshop_tags` (
 	`workshop_id` integer NOT NULL,
 	`tag_id` integer NOT NULL,
+	PRIMARY KEY(`workshop_id`, `tag_id`),
 	FOREIGN KEY (`workshop_id`) REFERENCES `workshop`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`tag_id`) REFERENCES `workshop_tag`(`id`) ON UPDATE no action ON DELETE no action
 );
