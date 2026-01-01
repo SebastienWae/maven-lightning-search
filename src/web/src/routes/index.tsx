@@ -12,6 +12,7 @@ import {
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
+import { useEffect, useRef, useState } from "react";
 import { Logger } from "tslog";
 import { MultiSelectCombobox, type Option } from "@/components/MultiSelectCombobox";
 import { SortableTableHead } from "@/components/SortableTableHead";
@@ -91,6 +92,30 @@ function IndexPage() {
   const { talks, total, page, totalPages } = talksQuery.data;
   const pageNumbers = getPageNumbers(page, totalPages);
 
+  const [searchInput, setSearchInput] = useState(searchParams.search);
+  const isTypingRef = useRef(false);
+
+  useEffect(() => {
+    if (searchInput === searchParams.search) return;
+
+    isTypingRef.current = true;
+    const timeout = setTimeout(() => {
+      navigate({
+        to: "/",
+        search: (prev) => ({ ...prev, search: searchInput, page: 1 }),
+      });
+      isTypingRef.current = false;
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchInput, searchParams.search, navigate]);
+
+  useEffect(() => {
+    if (!isTypingRef.current) {
+      setSearchInput(searchParams.search);
+    }
+  }, [searchParams.search]);
+
   const tagOptions: Option<number>[] = filterOptionsQuery.data.tags.map((tag) => ({
     key: tag.id,
     value: tag.name,
@@ -122,7 +147,11 @@ function IndexPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <InputGroup>
-            <InputGroupInput placeholder="Search..." />
+            <InputGroupInput
+              placeholder="Search..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
             <InputGroupAddon>
               <MagnifyingGlassIcon />
             </InputGroupAddon>
