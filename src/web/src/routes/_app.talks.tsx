@@ -1,5 +1,9 @@
 import { ArrowUpRightIcon, CalendarIcon, CheckCircleIcon, RecordIcon, StarIcon, UserIcon } from "@phosphor-icons/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { MultiSelectCombobox, type Option } from "@/components/MultiSelectCombobox";
+import { SortableTableHead } from "@/components/SortableTableHead";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,189 +18,66 @@ import {
 } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  filterOptionsQueryOptions,
+  type Talk,
+  type TalksSearchParams,
+  talksQueryOptions,
+  talksSearchSchema,
+} from "@/utils/talks";
 
-type Talk = {
-  id: string;
-  title: string;
-  description: string;
-  isFeatured: boolean;
-  status: "Scheduled" | "Live" | "Recorded";
-  startTime: Date;
-  durationMin: number;
-  numSignups: number;
-  tags: { id: string; name: string }[];
-  instructors: { id: string; name: string; imageUrl: string }[];
-};
+type StatusValue = TalksSearchParams["status"][number];
 
-const fakeTalks: Talk[] = [
+const statusOptions: Option<StatusValue>[] = [
+  { value: "scheduled", label: "Scheduled", icon: <CalendarIcon weight="fill" size={16} className="text-gray-300" /> },
+  { value: "live", label: "Live", icon: <RecordIcon weight="fill" size={16} className="text-red-300" /> },
   {
-    id: "1",
-    title: "Introduction to React Server Components",
-    description:
-      "Learn the fundamentals of React Server Components and how they change the way we build React applications. We'll cover the mental model, when to use server vs client components, and best practices for data fetching. This session includes hands-on exercises and real-world examples from production applications.",
-    isFeatured: true,
-    status: "Recorded",
-    startTime: new Date("2025-02-15T14:00:00"),
-    durationMin: 60,
-    numSignups: 342,
-    tags: [
-      { id: "t1", name: "React" },
-      { id: "t2", name: "Frontend" },
-    ],
-    instructors: [
-      {
-        id: "i1",
-        name: "Sarah Chen",
-        imageUrl: "https://i.pravatar.cc/150?u=sarah",
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Building Type-Safe APIs with tRPC",
-    description:
-      "Discover how tRPC enables end-to-end type safety between your frontend and backend without code generation. We'll build a full-stack application from scratch.",
-    isFeatured: false,
-    status: "Live",
-    startTime: new Date("2025-02-18T10:00:00"),
-    durationMin: 45,
-    numSignups: 189,
-    tags: [
-      { id: "t3", name: "TypeScript" },
-      { id: "t4", name: "API" },
-      { id: "t5", name: "Full-Stack" },
-    ],
-    instructors: [
-      {
-        id: "i2",
-        name: "Marcus Johnson",
-        imageUrl: "https://i.pravatar.cc/150?u=marcus",
-      },
-      {
-        id: "i3",
-        name: "Elena Rodriguez",
-        imageUrl: "https://i.pravatar.cc/150?u=elena",
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Advanced CSS Grid Layouts",
-    description:
-      "Master CSS Grid with advanced techniques including subgrid, auto-placement algorithms, and responsive layouts without media queries. This workshop dives deep into the grid specification and shows you patterns that will transform how you approach layout challenges. We'll examine real-world case studies and rebuild complex layouts step by step.",
-    isFeatured: true,
-    status: "Scheduled",
-    startTime: new Date("2025-02-20T16:00:00"),
-    durationMin: 90,
-    numSignups: 256,
-    tags: [
-      { id: "t6", name: "CSS" },
-      { id: "t2", name: "Frontend" },
-    ],
-    instructors: [
-      {
-        id: "i4",
-        name: "Alex Kim",
-        imageUrl: "https://i.pravatar.cc/150?u=alex",
-      },
-    ],
-  },
-  {
-    id: "4",
-    title: "Database Performance Optimization",
-    description:
-      "Learn to identify and fix database bottlenecks. Covers indexing strategies, query optimization, and monitoring tools.",
-    isFeatured: false,
-    status: "Scheduled",
-    startTime: new Date("2025-02-22T09:00:00"),
-    durationMin: 75,
-    numSignups: 128,
-    tags: [
-      { id: "t7", name: "Database" },
-      { id: "t8", name: "Performance" },
-      { id: "t9", name: "Backend" },
-    ],
-    instructors: [
-      {
-        id: "i5",
-        name: "David Park",
-        imageUrl: "https://i.pravatar.cc/150?u=david",
-      },
-    ],
-  },
-  {
-    id: "5",
-    title: "Testing React Applications",
-    description:
-      "A comprehensive guide to testing React apps with Vitest and React Testing Library. Learn unit testing, integration testing, and how to write tests that give you confidence without slowing you down. We'll cover mocking, async testing patterns, and strategies for testing complex UI interactions.",
-    isFeatured: false,
-    status: "Recorded",
-    startTime: new Date("2025-02-25T13:00:00"),
-    durationMin: 60,
-    numSignups: 201,
-    tags: [
-      { id: "t1", name: "React" },
-      { id: "t10", name: "Testing" },
-    ],
-    instructors: [
-      {
-        id: "i6",
-        name: "Jessica Liu",
-        imageUrl: "https://i.pravatar.cc/150?u=jessica",
-      },
-      {
-        id: "i7",
-        name: "Ryan Murphy",
-        imageUrl: "https://i.pravatar.cc/150?u=ryan",
-      },
-    ],
-  },
-  {
-    id: "6",
-    title: "Kubernetes for Developers",
-    description:
-      "Get started with Kubernetes without the ops complexity. Perfect for developers who want to understand container orchestration.",
-    isFeatured: true,
-    status: "Live",
-    startTime: new Date("2025-02-28T11:00:00"),
-    durationMin: 120,
-    numSignups: 315,
-    tags: [
-      { id: "t11", name: "DevOps" },
-      { id: "t12", name: "Kubernetes" },
-      { id: "t13", name: "Containers" },
-    ],
-    instructors: [
-      {
-        id: "i8",
-        name: "Chris Anderson",
-        imageUrl: "https://i.pravatar.cc/150?u=chris",
-      },
-    ],
-  },
-  {
-    id: "7",
-    title: "State Management in 2025",
-    description:
-      "Compare modern state management solutions: Zustand, Jotai, Valtio, and the built-in React APIs. Learn when to use each and how to migrate between them. This talk cuts through the hype and gives you practical guidance based on real-world project requirements and team dynamics.",
-    isFeatured: false,
-    status: "Scheduled",
-    startTime: new Date("2025-03-02T15:00:00"),
-    durationMin: 45,
-    numSignups: 178,
-    tags: [
-      { id: "t1", name: "React" },
-      { id: "t14", name: "State Management" },
-    ],
-    instructors: [
-      {
-        id: "i1",
-        name: "Sarah Chen",
-        imageUrl: "https://i.pravatar.cc/150?u=sarah",
-      },
-    ],
+    value: "recorded",
+    label: "Recorded",
+    icon: <CheckCircleIcon weight="fill" size={16} className="text-green-300" />,
   },
 ];
+
+/**
+ * Generate page numbers for pagination with ellipsis.
+ * Returns array of page numbers or null (for ellipsis).
+ * Standard pattern: [1, ..., current-1, current, current+1, ..., lastPage]
+ */
+function getPageNumbers(currentPage: number, totalPages: number): (number | null)[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const pages: (number | null)[] = [];
+  const siblings = 1;
+
+  // Always include first page
+  pages.push(1);
+
+  // Calculate range around current page
+  const rangeStart = Math.max(2, currentPage - siblings);
+  const rangeEnd = Math.min(totalPages - 1, currentPage + siblings);
+
+  // Add ellipsis after first page if needed
+  if (rangeStart > 2) {
+    pages.push(null);
+  }
+
+  // Add pages in range
+  for (let i = rangeStart; i <= rangeEnd; i++) {
+    pages.push(i);
+  }
+
+  // Add ellipsis before last page if needed
+  if (rangeEnd < totalPages - 1) {
+    pages.push(null);
+  }
+
+  // Always include last page
+  pages.push(totalPages);
+
+  return pages;
+}
 
 function formatDate(date: Date): string {
   const year = date.getFullYear();
@@ -208,6 +89,14 @@ function formatDate(date: Date): string {
 }
 
 export const Route = createFileRoute("/_app/talks")({
+  validateSearch: zodValidator(talksSearchSchema),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ context, deps }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(talksQueryOptions(deps)),
+      context.queryClient.ensureQueryData(filterOptionsQueryOptions()),
+    ]);
+  },
   component: TalksPage,
 });
 
@@ -238,6 +127,51 @@ function StatusBadge({ status }: { status: Talk["status"] }) {
 }
 
 function TalksPage() {
+  const navigate = useNavigate();
+  const searchParams = Route.useSearch();
+  const talksQuery = useSuspenseQuery(talksQueryOptions(searchParams));
+  const filterOptionsQuery = useSuspenseQuery(filterOptionsQueryOptions());
+  const { talks, total, page, totalPages } = talksQuery.data;
+  const pageNumbers = getPageNumbers(page, totalPages);
+
+  const tagOptions: Option[] = filterOptionsQuery.data.tags.map((tag) => ({
+    value: tag.id,
+    label: tag.name,
+  }));
+
+  const instructorOptions: Option[] = filterOptionsQuery.data.instructors.map((inst) => ({
+    value: inst.id,
+    label: inst.name,
+  }));
+
+  const handleSort = (sortBy: "startTime" | "duration", sortOrder: "asc" | "desc") => {
+    navigate({
+      to: "/talks",
+      search: (prev) => ({ ...prev, sortBy, sortOrder, page: 1 }),
+    });
+  };
+
+  const handleStatusChange = (statuses: StatusValue[]) => {
+    navigate({
+      to: "/talks",
+      search: (prev) => ({ ...prev, status: statuses, page: 1 }),
+    });
+  };
+
+  const handleTagsChange = (tags: string[]) => {
+    navigate({
+      to: "/talks",
+      search: (prev) => ({ ...prev, tags, page: 1 }),
+    });
+  };
+
+  const handleInstructorsChange = (instructors: string[]) => {
+    navigate({
+      to: "/talks",
+      search: (prev) => ({ ...prev, instructors, page: 1 }),
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-dashed">
@@ -246,16 +180,51 @@ function TalksPage() {
             <TableRow>
               <TableHead>Title</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Start Time</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead>Instructors</TableHead>
-              <TableHead>Status</TableHead>
+              <SortableTableHead
+                sortKey="startTime"
+                currentSortBy={searchParams.sortBy}
+                currentSortOrder={searchParams.sortOrder}
+                onSort={handleSort}
+              >
+                Start Time
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="duration"
+                currentSortBy={searchParams.sortBy}
+                currentSortOrder={searchParams.sortOrder}
+                onSort={handleSort}
+              >
+                Duration
+              </SortableTableHead>
+              <TableHead className="p-0">
+                <MultiSelectCombobox
+                  label="Tags"
+                  options={tagOptions}
+                  selectedValues={searchParams.tags}
+                  onSelectionChange={handleTagsChange}
+                />
+              </TableHead>
+              <TableHead className="p-0">
+                <MultiSelectCombobox
+                  label="Instructors"
+                  options={instructorOptions}
+                  selectedValues={searchParams.instructors}
+                  onSelectionChange={handleInstructorsChange}
+                />
+              </TableHead>
+              <TableHead className="p-0">
+                <MultiSelectCombobox
+                  label="Status"
+                  options={statusOptions}
+                  selectedValues={searchParams.status}
+                  onSelectionChange={handleStatusChange}
+                />
+              </TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fakeTalks.map((talk) => (
+            {talks.map((talk) => (
               <TableRow key={talk.id}>
                 <TableCell className="font-medium">
                   <span className="inline-flex items-center gap-1.5">
@@ -263,24 +232,48 @@ function TalksPage() {
                     {talk.title}
                   </span>
                 </TableCell>
-                <TableCell className="max-w-xs">
-                  <span className="whitespace-normal">{talk.description}</span>
+                <TableCell className="max-w-xl">
+                  <span className="whitespace-pre-line">{talk.description}</span>
                 </TableCell>
                 <TableCell>{formatDate(talk.startTime)}</TableCell>
                 <TableCell>{talk.durationMin} min</TableCell>
-                <TableCell>
+                <TableCell className="w-32 min-w-32">
                   <div className="flex flex-wrap gap-1">
                     {talk.tags.map((tag) => (
-                      <Badge key={tag.id} variant="secondary">
+                      <Badge
+                        key={tag.id}
+                        variant="secondary"
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const isSelected = searchParams.tags.includes(tag.id);
+                          handleTagsChange(
+                            isSelected
+                              ? searchParams.tags.filter((id) => id !== tag.id)
+                              : [...searchParams.tags, tag.id],
+                          );
+                        }}
+                      >
                         {tag.name}
                       </Badge>
                     ))}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-40 min-w-40">
                   <div className="flex flex-wrap gap-1">
                     {talk.instructors.map((instructor) => (
-                      <Badge key={instructor.id} variant="outline" className="h-auto py-1">
+                      <Badge
+                        key={instructor.id}
+                        variant="outline"
+                        className="h-auto py-1 cursor-pointer"
+                        onClick={() => {
+                          const isSelected = searchParams.instructors.includes(instructor.id);
+                          handleInstructorsChange(
+                            isSelected
+                              ? searchParams.instructors.filter((id) => id !== instructor.id)
+                              : [...searchParams.instructors, instructor.id],
+                          );
+                        }}
+                      >
                         <Avatar size="sm">
                           <AvatarImage src={instructor.imageUrl} />
                           <AvatarFallback>
@@ -296,7 +289,13 @@ function TalksPage() {
                   <StatusBadge status={talk.status} />
                 </TableCell>
                 <TableCell>
-                  <Button variant="outline" size="xs">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={(e) => e.stopPropagation()}
+                    render={<a href={`https://maven.com/p/${talk.slug}/`} target="_blank" rel="noopener noreferrer" />}
+                    nativeButton={false}
+                  >
                     <ArrowUpRightIcon />
                   </Button>
                 </TableCell>
@@ -305,10 +304,20 @@ function TalksPage() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex items-center gap-4 mb-2">
+        <div className="text-muted-foreground text-xs">{total} total results</div>
+        <div className="flex-1" />
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-xs">Rows per page</span>
-          <Select defaultValue="10">
+          <Select
+            value={String(searchParams.limit)}
+            onValueChange={(value) =>
+              navigate({
+                to: "/talks",
+                search: (prev) => ({ ...prev, limit: Number(value), page: 1 }),
+              })
+            }
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -323,27 +332,55 @@ function TalksPage() {
         <Pagination className="mx-0 w-auto">
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" />
+              <PaginationPrevious
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page > 1) {
+                    navigate({
+                      to: "/talks",
+                      search: (prev) => ({ ...prev, page: page - 1 }),
+                    });
+                  }
+                }}
+                aria-disabled={page === 1}
+                className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
             </PaginationItem>
+            {pageNumbers.map((pageNum, idx) => (
+              <PaginationItem key={pageNum === null ? `ellipsis-${idx}` : pageNum}>
+                {pageNum === null ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate({
+                        to: "/talks",
+                        search: (prev) => ({ ...prev, page: pageNum }),
+                      });
+                    }}
+                    isActive={pageNum === page}
+                    className="cursor-pointer"
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
             <PaginationItem>
-              <PaginationLink href="#" isActive>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">10</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
+              <PaginationNext
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page < totalPages) {
+                    navigate({
+                      to: "/talks",
+                      search: (prev) => ({ ...prev, page: page + 1 }),
+                    });
+                  }
+                }}
+                aria-disabled={page === totalPages}
+                className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

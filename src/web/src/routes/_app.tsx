@@ -17,7 +17,25 @@ function AppLayout() {
     <Tabs value={activeTab} className="w-full flex-col justify-start gap-2 px-4 lg:px-6">
       <div className="flex items-center justify-between">
         <TabsList>
-          <TabsTrigger value="talks" render={<Link to="/talks" />} nativeButton={false}>
+          <TabsTrigger
+            value="talks"
+            render={
+              <Link
+                to="/talks"
+                search={{
+                  page: 1,
+                  limit: 10,
+                  sortBy: "startTime",
+                  sortOrder: "desc",
+                  search: "",
+                  tags: [],
+                  instructors: [],
+                  status: [],
+                }}
+              />
+            }
+            nativeButton={false}
+          >
             Talks
           </TabsTrigger>
           <TabsTrigger value="instructors" render={<Link to="/instructors" />} nativeButton={false}>
