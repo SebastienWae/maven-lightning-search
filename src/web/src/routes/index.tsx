@@ -218,12 +218,13 @@ function IndexPage() {
         </div>
       </div>
       <div className="rounded-lg border border-dashed">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead className="w-48">Title</TableHead>
+              <TableHead className="w-80">Description</TableHead>
               <SortableTableHead
+                className="w-36"
                 sortKey="startTime"
                 currentSortBy={searchParams.sortBy}
                 currentSortOrder={searchParams.sortOrder}
@@ -232,6 +233,7 @@ function IndexPage() {
                 Start Time
               </SortableTableHead>
               <SortableTableHead
+                className="w-24"
                 sortKey="duration"
                 currentSortBy={searchParams.sortBy}
                 currentSortOrder={searchParams.sortOrder}
@@ -239,7 +241,7 @@ function IndexPage() {
               >
                 Duration
               </SortableTableHead>
-              <TableHead className="p-0">
+              <TableHead className="w-32 p-0">
                 <MultiSelectCombobox
                   label="Tags"
                   options={tagOptions}
@@ -247,7 +249,7 @@ function IndexPage() {
                   onSelectionChange={(v) => handleFilterChange("tags", v)}
                 />
               </TableHead>
-              <TableHead className="p-0">
+              <TableHead className="w-40 p-0">
                 <MultiSelectCombobox
                   label="Instructors"
                   options={instructorOptions}
@@ -255,7 +257,7 @@ function IndexPage() {
                   onSelectionChange={(v) => handleFilterChange("instructors", v)}
                 />
               </TableHead>
-              <TableHead className="p-0">
+              <TableHead className="w-28 p-0">
                 <MultiSelectCombobox
                   label="Status"
                   options={statusOptions}
@@ -263,13 +265,13 @@ function IndexPage() {
                   onSelectionChange={(v) => handleFilterChange("status", v)}
                 />
               </TableHead>
-              <TableHead></TableHead>
+              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {talks.map((talk) => (
               <TableRow key={talk.id}>
-                <TableCell className="font-medium">
+                <TableCell className="font-medium whitespace-normal">
                   <span className="inline-flex items-center gap-1.5">
                     {talk.isFeatured && <StarIcon size={14} weight="fill" className="text-primary" />}
                     {talk.title}
@@ -278,9 +280,9 @@ function IndexPage() {
                 <TableCell className="max-w-xl">
                   <span className="whitespace-pre-line">{talk.description}</span>
                 </TableCell>
-                <TableCell>{formatDate(talk.startTime)}</TableCell>
+                <TableCell className="whitespace-normal">{formatDate(talk.startTime)}</TableCell>
                 <TableCell>{talk.durationMin} min</TableCell>
-                <TableCell className="w-32 min-w-32">
+                <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {talk.tags.map((tag) => (
                       <Badge
@@ -302,7 +304,7 @@ function IndexPage() {
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="w-40 min-w-40">
+                <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {talk.instructors.map((instructor) => (
                       <Badge
