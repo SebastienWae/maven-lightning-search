@@ -10,10 +10,9 @@ export const workshop = sqliteTable("workshop", {
   isCanceled: integer("is_canceled", { mode: "boolean" }).notNull(),
   isDelisted: integer("is_delisted", { mode: "boolean" }).notNull(),
   isFeatured: integer("is_featured", { mode: "boolean" }).notNull(),
-  startDatetime: text("start_datetime").notNull(),
-  endDatetime: text("end_datetime").notNull(),
+  startTimestamp: integer("start_timestamp").notNull(),
+  endTimestamp: integer("end_timestamp").notNull(),
   durationMin: integer("duration_min").notNull(),
-  timezone: text("timezone").notNull(),
   hasInternalRecording: integer("has_internal_recording", {
     mode: "boolean",
   }).notNull(),

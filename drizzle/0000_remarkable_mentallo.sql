@@ -13,10 +13,9 @@ CREATE TABLE `workshop` (
 	`is_canceled` integer NOT NULL,
 	`is_delisted` integer NOT NULL,
 	`is_featured` integer NOT NULL,
-	`start_datetime` text NOT NULL,
-	`end_datetime` text NOT NULL,
+	`start_timestamp` integer NOT NULL,
+	`end_timestamp` integer NOT NULL,
 	`duration_min` integer NOT NULL,
-	`timezone` text NOT NULL,
 	`has_internal_recording` integer NOT NULL,
 	`is_recording_public` integer NOT NULL,
 	`num_signups` integer NOT NULL
