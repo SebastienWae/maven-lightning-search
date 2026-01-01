@@ -55,6 +55,9 @@ export function MultiSelectCombobox<T extends string | number>({
 
   const triggerText = noneSelected || allSelected ? `${label} (All)` : `${label} (${selectedValues.length})`;
 
+  const selectedOptions = options.filter((o) => selectedValues.includes(o.key));
+  const unselectedOptions = options.filter((o) => !selectedValues.includes(o.key));
+
   return (
     <div className={cn("flex items-center", className)}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -82,20 +85,37 @@ export function MultiSelectCombobox<T extends string | number>({
                   </span>
                 </CommandItem>
               </CommandGroup>
-              <CommandSeparator />
-              <CommandGroup>
-                {options.map((option) => (
-                  <CommandItem
-                    key={option.key}
-                    value={option.value}
-                    data-checked={selectedValues.includes(option.key)}
-                    onSelect={() => toggleValue(option.key)}
-                  >
-                    {option.icon}
-                    {option.value}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {selectedOptions.length > 0 && (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup>
+                    {selectedOptions.map((option) => (
+                      <CommandItem
+                        key={option.key}
+                        value={option.value}
+                        data-checked
+                        onSelect={() => toggleValue(option.key)}
+                      >
+                        {option.icon}
+                        {option.value}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )}
+              {unselectedOptions.length > 0 && (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup>
+                    {unselectedOptions.map((option) => (
+                      <CommandItem key={option.key} value={option.value} onSelect={() => toggleValue(option.key)}>
+                        {option.icon}
+                        {option.value}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
