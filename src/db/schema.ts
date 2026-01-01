@@ -1,4 +1,3 @@
-import { relations } from "drizzle-orm";
 import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const workshop = sqliteTable("workshop", {
@@ -59,38 +58,3 @@ export const workshopInstructors = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.workshopId, table.instructorId] })],
 );
-
-export const workshopRelations = relations(workshop, ({ many }) => ({
-  workshopInstructors: many(workshopInstructors),
-  workshopTags: many(workshopTags),
-}));
-
-export const instructorRelations = relations(instructor, ({ many }) => ({
-  workshopInstructors: many(workshopInstructors),
-}));
-
-export const workshopTagRelations = relations(workshopTag, ({ many }) => ({
-  workshopTags: many(workshopTags),
-}));
-
-export const workshopInstructorsRelations = relations(workshopInstructors, ({ one }) => ({
-  workshop: one(workshop, {
-    fields: [workshopInstructors.workshopId],
-    references: [workshop.id],
-  }),
-  instructor: one(instructor, {
-    fields: [workshopInstructors.instructorId],
-    references: [instructor.id],
-  }),
-}));
-
-export const workshopTagsRelations = relations(workshopTags, ({ one }) => ({
-  workshop: one(workshop, {
-    fields: [workshopTags.workshopId],
-    references: [workshop.id],
-  }),
-  tag: one(workshopTag, {
-    fields: [workshopTags.tagId],
-    references: [workshopTag.id],
-  }),
-}));
