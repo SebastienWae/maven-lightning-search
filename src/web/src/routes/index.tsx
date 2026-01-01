@@ -10,7 +10,7 @@ import {
   UserIcon,
 } from "@phosphor-icons/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { useEffect, useRef, useState } from "react";
 import { Logger } from "tslog";
@@ -85,6 +85,7 @@ function StatusBadge({ status }: { status: Talk["status"] }) {
 }
 
 function IndexPage() {
+  const router = useRouter();
   const navigate = useNavigate();
   const searchParams = Route.useSearch();
   const talksQuery = useSuspenseQuery(talksQueryOptions(searchParams));
@@ -157,10 +158,18 @@ function IndexPage() {
             </InputGroupAddon>
           </InputGroup>
           <ButtonGroup>
-            <Button variant="outline">
+            <Button
+              variant="outline"
+              render={<a href={router.buildLocation({ to: "/download", search: searchParams }).href} />}
+              nativeButton={false}
+            >
               <FileArrowDownIcon />
             </Button>
-            <Button variant="outline">
+            <Button
+              variant="outline"
+              render={<a href={router.buildLocation({ to: "/rss", search: searchParams }).href} />}
+              nativeButton={false}
+            >
               <RssSimpleIcon />
             </Button>
           </ButtonGroup>
