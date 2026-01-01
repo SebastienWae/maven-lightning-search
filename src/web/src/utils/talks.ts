@@ -12,6 +12,8 @@ import { Logger } from "tslog";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
+const log = new Logger({ name: "web:utils:talks" });
+
 export type Talk = {
   id: string;
   slug: string;
@@ -22,7 +24,7 @@ export type Talk = {
   startTime: Date;
   durationMin: number;
   numSignups: number;
-  tags: { id: string; name: string }[];
+  tags: { id: number; name: string }[];
   instructors: { id: string; name: string; imageUrl: string }[];
 };
 
@@ -34,19 +36,16 @@ export type TalksResponse = {
   totalPages: number;
 };
 
-const log = new Logger({ name: "web:utils:talks" });
-
 export const talksSearchSchema = z.object({
   page: z.number().int().positive().default(1),
   limit: z.number().int().positive().default(10),
   sortBy: z.enum(["startTime", "duration"]).default("startTime"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
   search: z.string().default(""),
-  tags: z.array(z.string()).default([]),
+  tags: z.array(z.number()).default([]),
   instructors: z.array(z.string()).default([]),
   status: z.array(z.enum(["scheduled", "live", "recorded"])).default([]),
 });
-
 export type TalksSearchParams = z.infer<typeof talksSearchSchema>;
 
 export const getTalks = createServerFn({ method: "GET" })
@@ -122,7 +121,6 @@ export const getTalks = createServerFn({ method: "GET" })
           conditions.push(statusOr);
         }
       }
-      console.log(statusConditions);
     }
 
     const whereClause = and(...conditions);
@@ -151,7 +149,7 @@ export const getTalks = createServerFn({ method: "GET" })
         durationMin: workshop.durationMin,
         numSignups: workshop.numSignups,
         tags: sql`JSON_GROUP_ARRAY(DISTINCT JSON_OBJECT('id', ${workshopTag.id}, 'name', ${workshopTag.name})) FILTER (WHERE ${workshopTag.id} IS NOT NULL)`.mapWith(
-          (value) => JSON.parse(value) as { id: string; name: string }[],
+          (value) => JSON.parse(value) as { id: number; name: string }[],
         ),
         instructors:
           sql`JSON_GROUP_ARRAY(DISTINCT JSON_OBJECT('id', ${instructor.id}, 'name', ${instructor.name}, 'imageUrl', ${instructor.imageUrl})) FILTER (WHERE ${instructor.id} IS NOT NULL)`.mapWith(
@@ -216,29 +214,23 @@ export const talksQueryOptions = (params: TalksSearchParams) =>
     queryFn: () => getTalks({ data: params }),
   });
 
-export type FilterOptions = {
-  tags: { id: string; name: string }[];
-  instructors: { id: string; name: string; imageUrl: string }[];
-};
+export const getFilterOptions = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ tags: Talk["tags"]; instructors: Talk["instructors"] }> => {
+    log.debug("Fetching filter options");
 
-export const getFilterOptions = createServerFn({ method: "GET" }).handler(async (): Promise<FilterOptions> => {
-  log.debug("Fetching filter options");
+    const [tags, instructors] = await Promise.all([
+      db.select({ id: workshopTag.id, name: workshopTag.name }).from(workshopTag).orderBy(workshopTag.name),
+      db
+        .select({ id: instructor.id, name: instructor.name, imageUrl: instructor.imageUrl })
+        .from(instructor)
+        .orderBy(instructor.name),
+    ]);
 
-  const [tags, instructors] = await Promise.all([
-    db.select({ id: workshopTag.id, name: workshopTag.name }).from(workshopTag).orderBy(workshopTag.name),
-    db
-      .select({ id: instructor.id, name: instructor.name, imageUrl: instructor.imageUrl })
-      .from(instructor)
-      .orderBy(instructor.name),
-  ]);
+    log.debug(`Fetched ${tags.length} tags and ${instructors.length} instructors`);
 
-  log.debug(`Fetched ${tags.length} tags and ${instructors.length} instructors`);
-
-  return {
-    tags: tags.map((t) => ({ id: String(t.id), name: t.name })),
-    instructors,
-  };
-});
+    return { tags, instructors };
+  },
+);
 
 export const filterOptionsQueryOptions = () =>
   queryOptions({

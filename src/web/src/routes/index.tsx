@@ -12,6 +12,7 @@ import {
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
+import { Logger } from "tslog";
 import { MultiSelectCombobox, type Option } from "@/components/MultiSelectCombobox";
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getPageNumbers } from "@/lib/pagination";
 import {
   filterOptionsQueryOptions,
   type Talk,
@@ -38,54 +40,7 @@ import {
   talksSearchSchema,
 } from "@/utils/talks";
 
-type StatusValue = TalksSearchParams["status"][number];
-
-const statusOptions: Option<StatusValue>[] = [
-  { value: "scheduled", label: "Scheduled", icon: <CalendarIcon weight="fill" size={16} className="text-gray-300" /> },
-  { value: "live", label: "Live", icon: <RecordIcon weight="fill" size={16} className="text-red-300" /> },
-  {
-    value: "recorded",
-    label: "Recorded",
-    icon: <CheckCircleIcon weight="fill" size={16} className="text-green-300" />,
-  },
-];
-
-/**
- * Generate page numbers for pagination with ellipsis.
- * Returns array of page numbers or null (for ellipsis).
- * Always returns exactly 7 items when totalPages > 7 to prevent layout shift.
- */
-function getPageNumbers(currentPage: number, totalPages: number): (number | null)[] {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  // Always return exactly 7 items for consistent layout
-  const showLeftEllipsis = currentPage > 4;
-  const showRightEllipsis = currentPage < totalPages - 3;
-
-  if (!showLeftEllipsis) {
-    // Near start: [1, 2, 3, 4, 5, ..., totalPages]
-    return [1, 2, 3, 4, 5, null, totalPages];
-  }
-
-  if (!showRightEllipsis) {
-    // Near end: [1, ..., totalPages-4, totalPages-3, totalPages-2, totalPages-1, totalPages]
-    return [1, null, totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-  }
-
-  // Middle: [1, ..., currentPage-1, currentPage, currentPage+1, ..., totalPages]
-  return [1, null, currentPage - 1, currentPage, currentPage + 1, null, totalPages];
-}
-
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
-}
+const log = new Logger({ name: "web:routes:index" });
 
 export const Route = createFileRoute("/")({
   validateSearch: zodValidator(talksSearchSchema),
@@ -99,30 +54,33 @@ export const Route = createFileRoute("/")({
   component: IndexPage,
 });
 
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+const statusOptions: Option<TalksSearchParams["status"][number]>[] = [
+  { key: "scheduled", value: "Scheduled", icon: <CalendarIcon weight="fill" size={16} className="text-gray-300" /> },
+  { key: "live", value: "Live", icon: <RecordIcon weight="fill" size={16} className="text-red-300" /> },
+  {
+    key: "recorded",
+    value: "Recorded",
+    icon: <CheckCircleIcon weight="fill" size={16} className="text-green-300" />,
+  },
+];
+
 function StatusBadge({ status }: { status: Talk["status"] }) {
-  switch (status) {
-    case "Scheduled":
-      return (
-        <span className="inline-flex items-center gap-1.5">
-          <CalendarIcon weight="fill" size={16} className="text-gray-300" />
-          {status}
-        </span>
-      );
-    case "Live":
-      return (
-        <span className="inline-flex items-center gap-1.5">
-          <RecordIcon size={16} weight="fill" className="text-red-300" />
-          {status}
-        </span>
-      );
-    case "Recorded":
-      return (
-        <span className="inline-flex items-center gap-1.5">
-          <CheckCircleIcon size={16} weight="fill" className="text-green-300" />
-          {status}
-        </span>
-      );
-  }
+  const option = statusOptions.find((o) => o.value === status);
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {option?.icon}
+      {status}
+    </span>
+  );
 }
 
 function IndexPage() {
@@ -133,41 +91,29 @@ function IndexPage() {
   const { talks, total, page, totalPages } = talksQuery.data;
   const pageNumbers = getPageNumbers(page, totalPages);
 
-  const tagOptions: Option[] = filterOptionsQuery.data.tags.map((tag) => ({
-    value: tag.id,
-    label: tag.name,
+  const tagOptions: Option<number>[] = filterOptionsQuery.data.tags.map((tag) => ({
+    key: tag.id,
+    value: tag.name,
   }));
 
-  const instructorOptions: Option[] = filterOptionsQuery.data.instructors.map((inst) => ({
-    value: inst.id,
-    label: inst.name,
+  const instructorOptions: Option<string>[] = filterOptionsQuery.data.instructors.map((inst) => ({
+    key: inst.id,
+    value: inst.name,
   }));
 
-  const handleSort = (sortBy: "startTime" | "duration", sortOrder: "asc" | "desc") => {
+  const handleSort = (sortBy: TalksSearchParams["sortBy"], sortOrder: TalksSearchParams["sortOrder"]) => {
+    log.debug("Sort changed", { sortBy, sortOrder });
     navigate({
       to: "/",
       search: (prev) => ({ ...prev, sortBy, sortOrder, page: 1 }),
     });
   };
 
-  const handleStatusChange = (statuses: StatusValue[]) => {
+  const handleFilterChange = <K extends keyof TalksSearchParams>(key: K, values: TalksSearchParams[K]) => {
+    log.debug("Filter changed", { key, values });
     navigate({
       to: "/",
-      search: (prev) => ({ ...prev, status: statuses, page: 1 }),
-    });
-  };
-
-  const handleTagsChange = (tags: string[]) => {
-    navigate({
-      to: "/",
-      search: (prev) => ({ ...prev, tags, page: 1 }),
-    });
-  };
-
-  const handleInstructorsChange = (instructors: string[]) => {
-    navigate({
-      to: "/",
-      search: (prev) => ({ ...prev, instructors, page: 1 }),
+      search: (prev) => ({ ...prev, [key]: values, page: 1 }),
     });
   };
 
@@ -298,7 +244,7 @@ function IndexPage() {
                   label="Tags"
                   options={tagOptions}
                   selectedValues={searchParams.tags}
-                  onSelectionChange={handleTagsChange}
+                  onSelectionChange={(v) => handleFilterChange("tags", v)}
                 />
               </TableHead>
               <TableHead className="p-0">
@@ -306,7 +252,7 @@ function IndexPage() {
                   label="Instructors"
                   options={instructorOptions}
                   selectedValues={searchParams.instructors}
-                  onSelectionChange={handleInstructorsChange}
+                  onSelectionChange={(v) => handleFilterChange("instructors", v)}
                 />
               </TableHead>
               <TableHead className="p-0">
@@ -314,7 +260,7 @@ function IndexPage() {
                   label="Status"
                   options={statusOptions}
                   selectedValues={searchParams.status}
-                  onSelectionChange={handleStatusChange}
+                  onSelectionChange={(v) => handleFilterChange("status", v)}
                 />
               </TableHead>
               <TableHead></TableHead>
@@ -343,7 +289,8 @@ function IndexPage() {
                         className="cursor-pointer"
                         onClick={() => {
                           const isSelected = searchParams.tags.includes(tag.id);
-                          handleTagsChange(
+                          handleFilterChange(
+                            "tags",
                             isSelected
                               ? searchParams.tags.filter((id) => id !== tag.id)
                               : [...searchParams.tags, tag.id],
@@ -364,7 +311,8 @@ function IndexPage() {
                         className="h-auto py-1 cursor-pointer"
                         onClick={() => {
                           const isSelected = searchParams.instructors.includes(instructor.id);
-                          handleInstructorsChange(
+                          handleFilterChange(
+                            "instructors",
                             isSelected
                               ? searchParams.instructors.filter((id) => id !== instructor.id)
                               : [...searchParams.instructors, instructor.id],

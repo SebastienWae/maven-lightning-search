@@ -13,26 +13,21 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-export type Option<T extends string = string> = {
-  value: T;
-  label: string;
+export type Option<T extends string | number> = {
+  key: T;
+  value: string;
   icon?: React.ReactNode;
 };
 
-type MultiSelectComboboxProps<T extends string = string> = {
-  /** Label shown in the trigger button */
+type MultiSelectComboboxProps<T extends string | number> = {
   label: string;
-  /** Available options to select from */
   options: Option<T>[];
-  /** Currently selected values */
   selectedValues: T[];
-  /** Callback when selection changes */
   onSelectionChange: (values: T[]) => void;
-  /** Additional className for the trigger button */
-  className?: string;
+  className?: React.ComponentProps<"div">["className"];
 };
 
-export function MultiSelectCombobox<T extends string = string>({
+export function MultiSelectCombobox<T extends string | number>({
   label,
   options,
   selectedValues,
@@ -40,27 +35,24 @@ export function MultiSelectCombobox<T extends string = string>({
   className,
 }: MultiSelectComboboxProps<T>) {
   const [open, setOpen] = React.useState(false);
-
-  // Use Set for O(1) lookups instead of O(n) array.includes()
-  const selectedSet = React.useMemo(() => new Set(selectedValues), [selectedValues]);
-
   const allSelected = selectedValues.length === options.length;
   const noneSelected = selectedValues.length === 0;
 
   const toggleValue = (value: T) => {
-    const updated = selectedSet.has(value) ? selectedValues.filter((v) => v !== value) : [...selectedValues, value];
+    const updated = selectedValues.includes(value)
+      ? selectedValues.filter((v) => v !== value)
+      : [...selectedValues, value];
     onSelectionChange(updated);
   };
 
   const selectAll = () => {
-    onSelectionChange(options.map((o) => o.value));
+    onSelectionChange(options.map((o) => o.key));
   };
 
   const clearSelection = () => {
     onSelectionChange([]);
   };
 
-  // Determine trigger text
   const triggerText = noneSelected || allSelected ? `${label} (All)` : `${label} (${selectedValues.length})`;
 
   return (
@@ -94,13 +86,13 @@ export function MultiSelectCombobox<T extends string = string>({
               <CommandGroup>
                 {options.map((option) => (
                   <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    data-checked={selectedSet.has(option.value)}
-                    onSelect={() => toggleValue(option.value)}
+                    key={option.key}
+                    value={option.value}
+                    data-checked={selectedValues.includes(option.key)}
+                    onSelect={() => toggleValue(option.key)}
                   >
                     {option.icon}
-                    {option.label}
+                    {option.value}
                   </CommandItem>
                 ))}
               </CommandGroup>
