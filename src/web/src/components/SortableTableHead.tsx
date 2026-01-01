@@ -1,6 +1,6 @@
 import { CaretDownIcon, CaretUpDownIcon, CaretUpIcon } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
 import { TableHead } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 type SortOrder = "asc" | "desc";
 
