@@ -3,7 +3,7 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { Logger } from "tslog";
 import { getTalks, talksSearchSchema } from "@/utils/talks";
 
-const log = new Logger({ name: "web:routes:rss" });
+const log = new Logger({ name: "web:routes:rss", type: "json", argumentsArrayName: "messages" });
 
 export const Route = createFileRoute("/rss")({
   validateSearch: zodValidator(talksSearchSchema),

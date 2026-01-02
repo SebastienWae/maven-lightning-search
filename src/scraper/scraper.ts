@@ -10,7 +10,7 @@ import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { Logger } from "tslog";
 import { type ApiResponse, ApiResponseSchema, type PublishedContentPageSection, type WorkshopItem } from "./schema";
 
-const logger = new Logger({ name: "scraper:scraper" });
+const logger = new Logger({ name: "scraper:scraper", type: "json", argumentsArrayName: "messages" });
 
 const API_BASE_URL = "https://api.maven.com/workshops/discoverable/by_tags";
 const DEFAULT_LIMIT = 24;

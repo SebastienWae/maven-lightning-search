@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { Logger } from "tslog";
 import { saveWorkshopsToDatabase, scrapeWorkshops } from "./scraper";
 
-const logger = new Logger({ name: "scraper:cron" });
+const logger = new Logger({ name: "scraper:worker", type: "json", argumentsArrayName: "messages" });
 
 export default {
   async scheduled(event, env, _ctx): Promise<void> {

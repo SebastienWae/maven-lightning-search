@@ -12,7 +12,7 @@ import { Logger } from "tslog";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
-const log = new Logger({ name: "web:utils:talks" });
+const log = new Logger({ name: "web:utils:talks", type: "json", argumentsArrayName: "messages" });
 
 export type Talk = {
   id: string;

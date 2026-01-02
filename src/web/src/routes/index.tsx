@@ -41,7 +41,7 @@ import {
   talksSearchSchema,
 } from "@/utils/talks";
 
-const log = new Logger({ name: "web:routes:index" });
+const log = new Logger({ name: "web:routes:index", type: "json", argumentsArrayName: "messages" });
 
 export const Route = createFileRoute("/")({
   validateSearch: zodValidator(talksSearchSchema),

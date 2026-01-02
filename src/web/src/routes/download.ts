@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Logger } from "tslog";
 import { getTalks, talksSearchSchema } from "@/utils/talks";
 
-const log = new Logger({ name: "web:routes:download" });
+const log = new Logger({ name: "web:routes:download", type: "json", argumentsArrayName: "messages" });
 
 function escapeCSV(value: string): string {
   if (value.includes(",") || value.includes('"') || value.includes("\n")) {
