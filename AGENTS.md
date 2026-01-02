@@ -8,16 +8,17 @@ maven-lightning-search is a search application for Maven workshops/talks with in
 
 - **Runtime:** Bun
 - **Monorepo:** Bun workspaces (`src/*`)
-- **Database:** SQLite with Drizzle ORM
-- **Web:** React 19, TanStack Router, TanStack Query, Tailwind CSS v4, shadcn (using Base UI, not Radix UI)
+- **Database:** Cloudflare D1 (SQLite) with Drizzle ORM
+- **Scraper:** Cloudflare Workers
+- **Web:** React 19, TanStack Router, TanStack Query, Tailwind CSS v4, shadcn (Base UI)
 - **Linting/Formatting:** Biome
 - **Logging:** tslog
 
 ## Project Structure
 
-- `src/data/` - Data scraper package (`@maven-lightning-search/data`)
-- `src/db/` - Database schema package (`@maven-lightning-search/db`)
-- `src/web/` - Web frontend package (`@maven-lightning-search/web`)
+- `src/scraper/` - Scraper Worker (`@maven-lightning-search/scraper`)
+- `src/db/` - Database schema (`@maven-lightning-search/db`)
+- `src/web/` - Web app (`@maven-lightning-search/web`)
 
 ## Logging
 
@@ -28,6 +29,7 @@ package:module
 ```
 
 Examples:
-- `data:scraper`
+- `scraper:worker`
+- `scraper:scraper`
 - `web:routes:talks`
 - `web:lib:db`
