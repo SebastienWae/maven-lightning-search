@@ -6,11 +6,12 @@ const log = new Logger({ name: "setup" });
 const DATABASE_NAME = "maven_search_prod";
 
 async function main() {
-  const token = process.argv[2];
+  const token = process.env.CLOUDFLARE_API_TOKEN ?? process.argv[2];
 
   if (!token) {
-    log.error(`Usage: bun run ${import.meta.file} <CLOUDFLARE_API_TOKEN>`);
-    log.error("  CLOUDFLARE_API_TOKEN: A Cloudflare API token with permissions: 'D1:Edit, Account Settings:Read'");
+    log.error(`Usage: set CLOUDFLARE_API_TOKEN then run: bun run ${import.meta.file}`);
+    log.error("  You can put it in .env as: CLOUDFLARE_API_TOKEN=...");
+    log.error("  Required permissions: 'D1:Edit, Account Settings:Read'");
     process.exit(1);
   }
 
@@ -20,8 +21,6 @@ async function main() {
   log.info("Fetching account ID...");
   const accounts = await client.accounts.list();
   const account = accounts.result?.[0];
-
-  log.error(accounts);
 
   if (!account?.id) {
     log.error("No Cloudflare account found for this token");
@@ -57,14 +56,14 @@ async function main() {
   const databaseId = database.uuid;
   log.info(`Database created with ID: ${databaseId}`);
 
-  // Write .env file
+  // Write .env file (overwrites existing)
   log.info("Writing .env file...");
-  const envContent = `CLOUDFLARE_ACCOUNT_ID=${accountId}
+  const envContent = `CLOUDFLARE_API_TOKEN=${token}
+CLOUDFLARE_ACCOUNT_ID=${accountId}
 CLOUDFLARE_DATABASE_ID=${databaseId}
-CLOUDFLARE_D1_TOKEN=${token}
 `;
   writeFileSync(".env", envContent);
-  log.info("Created .env");
+  log.info("Wrote .env");
 
   // Write root wrangler.jsonc
   log.info("Writing wrangler.jsonc files...");
@@ -144,8 +143,9 @@ CLOUDFLARE_D1_TOKEN=${token}
 
   log.info("Setup complete!");
   log.info("Next steps:");
-  log.info("  1. Run migrations: bun drizzle-kit push");
-  log.info("  2. Start dev server: bun run web:dev");
+  log.info("  1. Generate migrations: bun drizzle-kit generate");
+  log.info("  2. Run migrations: bun drizzle-kit migrate");
+  log.info("  3. Start dev server: bun run web:dev");
 }
 
 main().catch((error) => {

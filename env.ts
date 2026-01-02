@@ -3,7 +3,7 @@ import { z } from "zod";
 const envSchema = z.object({
   CLOUDFLARE_ACCOUNT_ID: z.string(),
   CLOUDFLARE_DATABASE_ID: z.string(),
-  CLOUDFLARE_D1_TOKEN: z.string(),
+  CLOUDFLARE_API_TOKEN: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);
