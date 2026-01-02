@@ -1,5 +1,4 @@
-import * as schema from "@maven-lightning-search/db/schema";
-import { drizzle } from "drizzle-orm/bun-sqlite";
-import { env } from "../../../../env";
+import { env } from "cloudflare:workers";
+import { drizzle } from "drizzle-orm/d1";
 
-export const db = drizzle(env.DB_FILE_NAME, { schema });
+export const db = drizzle(env.DB);

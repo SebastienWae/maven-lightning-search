@@ -1,13 +1,17 @@
 {
-  "name": "@maven-lightning-search/data",
+  "name": "@maven-lightning-search/scraper",
   "version": "1.0.0",
+  "scripts": {
+    "cf-typegen": "wrangler types"
+  },
   "dependencies": {
     "zod": "catalog:",
     "drizzle-orm": "catalog:",
     "@maven-lightning-search/db": "workspace:*",
     "tslog": "catalog:"
   },
-  "scripts": {
-    "scrape": "bun run scraper.ts"
+  "devDependencies": {
+    "@types/node": "^22",
+    "wrangler": "catalog:"
   }
 }

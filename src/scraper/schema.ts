@@ -2,27 +2,27 @@ import { z } from "zod";
 
 const WorkshopTagSchema = z.object({
   id: z.number(),
-  tag_type: z.string(),
-  label: z.string(),
-  slug: z.string(),
+  tag_type: z.string().nullable().optional(),
+  label: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
   description: z.string().nullable(),
   parent_tag_id: z.number().nullable(),
 });
 
 const InstructorInfoSchema = z.object({
-  name: z.string(),
-  uuid: z.string(),
+  name: z.string().trim().min(1),
+  uuid: z.string().nullable().optional(),
   logos: z
     .object({
-      label: z.string(),
+      label: z.string().nullable().optional(),
       logos: z.array(z.string()),
     })
     .nullable()
     .optional(),
-  title: z.string(),
-  bio_html: z.string(),
+  title: z.string().nullable().optional(),
+  bio_html: z.string().nullable().optional(),
   headline: z.string().nullable().optional(),
-  image_url: z.string(),
+  image_url: z.string().trim().min(1),
   highlights: z.array(z.string()).nullable().optional(),
   linkedin_url: z.string().nullable().optional(),
   twitter_handle: z.string().nullable().optional(),
@@ -32,23 +32,23 @@ const InstructorInfoSchema = z.object({
 });
 
 const LearningOutcomeSchema = z.object({
-  uuid: z.string(),
+  uuid: z.string().nullable().optional(),
   title: z.string(),
   description: z.string(),
 });
 
 const PublishedContentPageSectionSchema = z.object({
-  uuid: z.string(),
-  title: z.string(),
+  uuid: z.string().nullable().optional(),
+  title: z.string().trim().min(1),
   version: z.number(),
-  image_url: z.string(),
+  image_url: z.string().trim().min(1),
   is_visible: z.boolean(),
-  topic_desc: z.string(),
+  topic_desc: z.string().trim().min(1),
   brand_logos: z.object({
-    label: z.string(),
+    label: z.string().trim().nullable().optional(),
     logos: z.array(z.union([z.string(), z.looseObject({})])),
   }),
-  section_type: z.string(),
+  section_type: z.string().trim().min(1),
   instructor_infos: z.array(InstructorInfoSchema),
   learning_outcomes: z.array(LearningOutcomeSchema),
 });
@@ -56,14 +56,14 @@ const PublishedContentPageSectionSchema = z.object({
 const SchoolEventSchema = z.object({
   id: z.number(),
   slug: z.string().nullable(),
-  title: z.string(),
-  description: z.string(),
-  start_datetime: z.string(),
-  end_datetime: z.string(),
-  start_date: z.string(),
-  start_time: z.string(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  start_datetime: z.string().trim().min(1),
+  end_datetime: z.string().trim().min(1),
+  start_date: z.string().nullable().optional(),
+  start_time: z.string().nullable().optional(),
   duration_min: z.number(),
-  timezone: z.string(),
+  timezone: z.string().nullable().optional(),
   has_internal_recording: z.boolean(),
   is_recording_public: z.boolean(),
 });
@@ -71,14 +71,14 @@ const SchoolEventSchema = z.object({
 const PublishedContentPageSchema = z.object({
   id: z.number(),
   school_id: z.number(),
-  slug: z.string(),
-  content_page_type: z.string(),
+  slug: z.string().trim().min(1),
+  content_page_type: z.string().nullable().optional(),
   sections: z.array(PublishedContentPageSectionSchema),
-  created_at: z.string(),
-  updated_at: z.string(),
+  created_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
   theme: z.string().nullable(),
   attrs: z.object({
-    type: z.string(),
+    type: z.string().nullable().optional(),
     is_canceled: z.boolean().nullable(),
     is_delisted: z.boolean().nullable(),
     connected_course_id: z.number().nullable(),
@@ -109,7 +109,7 @@ const ApiResponseSchema = z.object({
   items: z.array(WorkshopItemSchema),
   metadata: ApiMetadataSchema,
   tag_id: z.number().nullable(),
-  tag_slug: z.string(),
+  tag_slug: z.string().nullable().optional(),
 });
 
 export type WorkshopTag = z.infer<typeof WorkshopTagSchema>;

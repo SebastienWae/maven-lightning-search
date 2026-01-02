@@ -6,25 +6,19 @@ import {
   workshopTags,
 } from "@maven-lightning-search/db/schema";
 import { and, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/bun-sqlite";
+import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { Logger } from "tslog";
-import { env } from "../../env";
 import { type ApiResponse, ApiResponseSchema, type PublishedContentPageSection, type WorkshopItem } from "./schema";
 
-const logger = new Logger({ name: "data:scraper" });
-
-const db = drizzle(env.DB_FILE_NAME);
+const logger = new Logger({ name: "scraper:scraper" });
 
 const API_BASE_URL = "https://api.maven.com/workshops/discoverable/by_tags";
 const DEFAULT_LIMIT = 24;
-const REQUEST_DELAY_MS = 100;
+const REQUEST_DELAY_MS = 10;
 const API_HEADERS = {
   accept: "application/json, text/plain, */*",
 };
 
-/**
- * Fetches a single page of workshops from the Maven API
- */
 async function fetchWorkshopPage(page: number, limit: number = DEFAULT_LIMIT): Promise<ApiResponse> {
   logger.info({ page, limit }, "Fetching workshop page");
 
@@ -49,9 +43,6 @@ async function fetchWorkshopPage(page: number, limit: number = DEFAULT_LIMIT): P
   return data;
 }
 
-/**
- * Scrapes all workshops from the Maven API with automatic pagination
- */
 export async function scrapeWorkshops(): Promise<WorkshopItem[]> {
   const allItems: WorkshopItem[] = [];
 
@@ -84,9 +75,6 @@ export async function scrapeWorkshops(): Promise<WorkshopItem[]> {
   return allItems;
 }
 
-/**
- * Normalizes the name of an instructor
- */
 function normalizeInstructorName(name: string): string {
   return name
     .trim()
@@ -101,33 +89,26 @@ function normalizeInstructorName(name: string): string {
     .join(" ");
 }
 
-/**
- * Creates a SHA-256 hash from instructor name and image URL
- */
-function createInstructorIdentityHash(name: string): string {
+async function createInstructorIdentityHash(name: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(name);
-  const hashBuffer = Bun.CryptoHasher.hash("sha256", data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(hashBuffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
-/**
- * Gets or creates an instructor and returns the instructor ID
- */
-async function getOrCreateInstructor(name: string, imageUrl: string): Promise<string> {
+async function getOrCreateInstructor(db: DrizzleD1Database, name: string, imageUrl: string): Promise<string> {
   const normalizedName = normalizeInstructorName(name);
-  const identityHash = createInstructorIdentityHash(normalizedName);
+  const identityHash = await createInstructorIdentityHash(normalizedName);
 
   const instructorData = {
     id: identityHash,
     name: normalizedName,
     imageUrl,
-    createdAt: new Date().toISOString(),
   };
 
-  const existing = db.select().from(instructor).where(eq(instructor.id, identityHash)).limit(1).get();
+  const existing = await db.select().from(instructor).where(eq(instructor.id, identityHash)).limit(1).get();
   if (existing) {
     await db.update(instructor).set(instructorData).where(eq(instructor.id, identityHash));
   } else {
@@ -137,17 +118,14 @@ async function getOrCreateInstructor(name: string, imageUrl: string): Promise<st
   return identityHash;
 }
 
-/**
- * Gets or creates a tag and returns the tag ID
- */
-async function getOrCreateTag(id: number, slug: string, name: string): Promise<number> {
+async function getOrCreateTag(db: DrizzleD1Database, id: number, slug: string, name: string): Promise<number> {
   const tagData = {
     id,
     slug,
     name,
   };
 
-  const existing = db.select().from(workshopTag).where(eq(workshopTag.id, id)).limit(1).get();
+  const existing = await db.select().from(workshopTag).where(eq(workshopTag.id, id)).limit(1).get();
 
   if (!existing) {
     await db.insert(workshopTag).values(tagData);
@@ -156,19 +134,13 @@ async function getOrCreateTag(id: number, slug: string, name: string): Promise<n
   return id;
 }
 
-/**
- * Formats the description of a workshop
- */
 function formatDescription(mainSection: PublishedContentPageSection) {
   return `${mainSection.topic_desc}
 
 ${mainSection.learning_outcomes.map((outcome) => `- ${outcome.title}: ${outcome.description}`).join("\n")}`;
 }
 
-/**
- * Saves workshop data to the database
- */
-export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promise<void> {
+export async function saveWorkshopsToDatabase(db: DrizzleD1Database, workshops: WorkshopItem[]): Promise<void> {
   let savedCount = 0;
   let updatedCount = 0;
 
@@ -199,7 +171,7 @@ export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promis
       numSignups: page.num_signups,
     };
 
-    const existing = db.select().from(workshop).where(eq(workshop.id, item.id)).limit(1).get();
+    const existing = await db.select().from(workshop).where(eq(workshop.id, item.id)).limit(1).get();
 
     if (existing) {
       await db.update(workshop).set(workshopData).where(eq(workshop.id, item.id));
@@ -210,8 +182,8 @@ export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promis
     }
 
     for (const { name, image_url } of mainSection.instructor_infos) {
-      const instructorId = await getOrCreateInstructor(name, image_url);
-      const existingRelation = db
+      const instructorId = await getOrCreateInstructor(db, name, image_url);
+      const existingRelation = await db
         .select()
         .from(workshopInstructors)
         .where(and(eq(workshopInstructors.workshopId, item.id), eq(workshopInstructors.instructorId, instructorId)))
@@ -226,8 +198,8 @@ export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promis
     }
 
     for (const tag of item.workshop_tags) {
-      const tagId = await getOrCreateTag(tag.id, tag.slug, tag.label);
-      const existingRelation = db
+      const tagId = await getOrCreateTag(db, tag.id, tag.slug, tag.label);
+      const existingRelation = await db
         .select()
         .from(workshopTags)
         .where(and(eq(workshopTags.workshopId, item.id), eq(workshopTags.tagId, tagId)))
@@ -243,24 +215,4 @@ export async function saveWorkshopsToDatabase(workshops: WorkshopItem[]): Promis
   }
 
   logger.info({ saved: savedCount, updated: updatedCount }, "Workshops saved to database");
-}
-
-/**
- * Main execution function
- */
-export async function main(): Promise<void> {
-  try {
-    logger.info("Starting Maven workshop scraper");
-    const workshops = await scrapeWorkshops();
-    await saveWorkshopsToDatabase(workshops);
-    logger.info("Scraper finished");
-  } catch (error) {
-    logger.error({ error }, "Scraper failed");
-    process.exit(1);
-  }
-}
-
-// Run main if this file is executed directly
-if (import.meta.main) {
-  await main();
 }

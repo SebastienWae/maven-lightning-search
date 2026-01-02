@@ -13,22 +13,32 @@
     "check": "biome check",
     "check:fix": "biome check --fix",
     "type-check": "tsc --noEmit",
-    "scrape": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/data scrape",
-    "dev": "bun --bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web dev"
+    "scrape:dev": "wrangler dev -c ./src/scraper/wrangler.jsonc --persist-to ./.wrangler/state",
+    "scrape:deploy": "wrangler deploy -c ./src/scraper/wrangler.jsonc",
+    "scrape:cf-typegen": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/scraper cf-typegen",
+    "web:dev": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web dev",
+    "web:build": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web build",
+    "web:preview": "bun run web:build && bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web preview",
+    "web:deploy": "bun run web:build && wrangler deploy -c ./src/web/wrangler.jsonc",
+    "web:cf-typegen": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web cf-typegen"
   },
   "catalog": {
     "zod": "^4.2.1",
     "drizzle-orm": "^0.45.1",
-    "tslog": "^4.10.2"
+    "tslog": "^4.10.2",
+    "wrangler": "^4.54.0"
   },
   "dependencies": {
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "tslog": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
     "@types/bun": "^1.3.5",
     "better-sqlite3": "^12.5.0",
-    "drizzle-kit": "^0.31.8"
+    "cloudflare": "^5.2.0",
+    "drizzle-kit": "^0.31.8",
+    "wrangler": "catalog:"
   },
   "peerDependencies": {
     "typescript": "^5"
