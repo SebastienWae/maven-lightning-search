@@ -18,8 +18,8 @@
     "scrape:cf-typegen": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/scraper cf-typegen",
     "web:dev": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web dev",
     "web:build": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web build",
-    "web:preview": "bun run web:build && bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web preview",
-    "web:deploy": "bun run web:build && wrangler deploy -c ./src/web/wrangler.jsonc",
+    "web:preview": "bun run --env-file .env --elide-lines=0 web:build && bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web preview",
+    "web:deploy": "bun run --env-file .env --elide-lines=0 web:build && wrangler deploy --cwd ./src/web",
     "web:cf-typegen": "bun run --env-file .env --elide-lines=0 --filter @maven-lightning-search/web cf-typegen"
   },
   "catalog": {
